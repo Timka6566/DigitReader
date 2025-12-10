@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Draw Digit</title>
+    <style>
+        body {
+            background: #111;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            font-family: sans-serif;
+        }
+        canvas {
+            background: white;
+            margin-top: 20px;
+            border: 2px solid #888;
+            border-radius: 10px;
+            touch-action: none;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Нарисуйте цифру</h2>
+    <canvas id="canvas" width="280" height="280"></canvas>
+
+    <button id="clearBtn">Очистить</button>
+    <button id="sendBtn">Отправить</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        let drawing = false;
+
+        canvas.addEventListener("mousedown", start);
+        canvas.addEventListener("touchstart", start);
+
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("touchmove", draw);
+
+        canvas.addEventListener("mouseup", end);
+        canvas.addEventListener("mouseleave", end);
+        canvas.addEventListener("touchend", end);
+
+        function getPos(e) {
+            if (e.touches) {
+                return {
+                    x: e.touches[0].clientX - canvas.offsetLeft,
+                    y: e.touches[0].clientY - canvas.offsetTop
+                };
+            }
+            return {
+                x: e.clientX - canvas.offsetLeft,
+                y: e.clientY - canvas.offsetTop
+            };
+        }
+
+        function start(e) {
+            drawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!drawing) return;
+            const pos = getPos(e);
+            ctx.lineWidth = 18;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "black";
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+
+        function end() {
+            drawing = false;
+        }
+
+        document.getElementById("clearBtn").onclick = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        };
+
+        document.getElementById("sendBtn").onclick = () => {
+            const data = canvas.toDataURL("image/png");
+            tg.sendData(data);  // <—— отправка в бот
+            tg.close();
+        };
+    </script>
+</body>
+</html>
