@@ -40,9 +40,8 @@
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         let drawing = false;
-        let hasContent = false;
 
-        // --- Функции рисования (работают всегда) ---
+        // --- Функции рисования ---
         function getPos(e) {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
@@ -54,10 +53,17 @@
 
         function start(e) {
             drawing = true;
-            if (!hasContent) {
-                hasContent = true;
+            draw(e); // Начинаем рисовать сразу
+            
+            // Показываем кнопку отправки, если она еще не видна
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                if (!tg.MainButton.isVisible) {
+                    tg.MainButton.setText("ОТПРАВИТЬ");
+                    tg.MainButton.enable();
+                    tg.MainButton.show();
+                }
             }
-            draw(e);
         }
 
         function draw(e) {
@@ -77,7 +83,7 @@
             ctx.beginPath();
         }
 
-        // --- Обработчики событий (работают всегда) ---
+        // --- Обработчики событий ---
         canvas.addEventListener("mousedown", start);
         canvas.addEventListener("touchstart", start);
         canvas.addEventListener("mousemove", draw);
@@ -88,34 +94,27 @@
 
         document.getElementById("clearBtn").onclick = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            hasContent = false;
+            // Прячем кнопку
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.MainButton.hide();
+                window.Telegram.WebApp.MainButton.disable();
+            }
         };
 
-        // --- Интеграция с Telegram (только если приложение в ТГ) ---
+        // --- Интеграция с Telegram ---
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             
             tg.ready(); 
             tg.expand();
 
-            // Настраиваем главную кнопку
-            tg.MainButton.text = "ОТПРАВИТЬ";
-            tg.MainButton.enable(); // Принудительно включаем кнопку
-            tg.MainButton.show();
+            // Кнопка изначально скрыта
+            tg.MainButton.hide();
 
             // Вешаем обработчик на главную кнопку
             tg.onEvent('mainButtonClicked', function() {
-                // --- ОТЛАДКА ---
-                // tg.showAlert("Обработчик mainButtonClicked сработал!"); 
-                
-                if (hasContent) {
-                    // --- ОТЛАДКА ---
-                    // tg.showAlert("hasContent = true. Отправляю данные...");
-                    const dataURL = canvas.toDataURL("image/png");
-                    tg.sendData(dataURL);
-                } else {
-                    tg.showAlert("На холсте пусто. Пожалуйста, нарисуйте цифру.");
-                }
+                const dataURL = canvas.toDataURL("image/png");
+                tg.sendData(dataURL);
             });
         }
     </script>
