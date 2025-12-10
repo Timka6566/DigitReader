@@ -99,21 +99,42 @@
             
             // Отправляем данные через Telegram Web App
             if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.sendData(dataURL);
+                try {
+                    window.Telegram.WebApp.sendData(dataURL);
+                    console.log("Данные отправлены через Telegram Web App");
+                } catch (error) {
+                    console.error("Ошибка при отправке данных через Telegram Web App:", error);
+                }
             } else {
                 // Для локального тестирования
                 console.log("Telegram Web App не доступен");
                 console.log("Data URL:", dataURL);
+                
+                // Попытка отправить данные через postMessage (для локального тестирования)
+                try {
+                    window.parent.postMessage({type: 'web_app_data', data: dataURL}, '*');
+                } catch (error) {
+                    console.error("Ошибка при отправке данных через postMessage:", error);
+                }
             }
         });
 
         // --- Интеграция с Telegram ---
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            
-            tg.ready(); 
-            tg.expand();
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                
+                // Добавляем обработчик для отладки
+                tg.onEvent('viewportChanged', function() {
+                    console.log('Viewport changed');
+                });
+                
+                tg.ready(); 
+                tg.expand();
+            } else {
+                console.log("Telegram Web App API не найден");
+            }
+        });
     </script>
 </body>
 </html>
