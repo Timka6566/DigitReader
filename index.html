@@ -95,20 +95,26 @@
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             
-            tg.ready(); // Сообщаем ТГ, что приложение готово
-            tg.expand(); // Раскрываем на весь экран
+            tg.ready(); 
+            tg.expand();
 
             // Настраиваем главную кнопку
             tg.MainButton.text = "ОТПРАВИТЬ";
+            tg.MainButton.enable(); // Принудительно включаем кнопку
             tg.MainButton.show();
 
             // Вешаем обработчик на главную кнопку
             tg.onEvent('mainButtonClicked', function() {
+                // --- ОТЛАДКА ---
+                // tg.showAlert("Обработчик mainButtonClicked сработал!"); 
+                
                 if (hasContent) {
+                    // --- ОТЛАДКА ---
+                    // tg.showAlert("hasContent = true. Отправляю данные...");
                     const dataURL = canvas.toDataURL("image/png");
                     tg.sendData(dataURL);
                 } else {
-                    tg.showAlert("Пожалуйста, нарисуйте что-нибудь!");
+                    tg.showAlert("На холсте пусто. Пожалуйста, нарисуйте цифру.");
                 }
             });
         }
