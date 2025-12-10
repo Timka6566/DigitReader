@@ -139,27 +139,34 @@ def draw_cmd(message):
 
 @bot.message_handler(content_types=['web_app_data'])
 def handle_web_app(message):
-    import base64
-    from PIL import Image
-    import io
+    print("Получены данные от Web App!") # Лог для проверки
+    try:
+        import base64
+        from PIL import Image
+        import io
 
-    data_url = message.web_app_data.data  # "data:image/png;base64,...."
+        data_url = message.web_app_data.data  # "data:image/png;base64,...."
 
-    # вырезаем base64
-    base64_str = data_url.split(",")[1]
-    img_bytes = base64.b64decode(base64_str)
+        # вырезаем base64
+        base64_str = data_url.split(",")[1]
+        img_bytes = base64.b64decode(base64_str)
 
-    img = Image.open(io.BytesIO(img_bytes))
+        img = Image.open(io.BytesIO(img_bytes))
 
-    # дальше — твоя функция preprocess_image_for_mnist()
-    x = preprocess_image_for_mnist(img)
+        # дальше — твоя функция preprocess_image_for_mnist()
+        x = preprocess_image_for_mnist(img)
 
-    preds = model.predict(x)
-    digit = int(np.argmax(preds))
-    conf = float(preds[0][digit]) * 100
+        preds = model.predict(x)
+        digit = int(np.argmax(preds))
+        conf = float(preds[0][digit]) * 100
 
-    bot.send_message(
-        message.chat.id, f"Это цифра: *{digit}*\nУверенность: {conf:.2f}%", parse_mode="Markdown")
+        bot.send_message(
+            message.chat.id, f"Это цифра: *{digit}*\nУверенность: {conf:.2f}%", parse_mode="Markdown")
+    except Exception as e:
+        # Отправляем сообщение об ошибке пользователю
+        bot.send_message(message.chat.id, f"Произошла ошибка при обработке вашего рисунка: {e}")
+        print(f"Ошибка в handle_web_app: {e}") # Лог в консоль
+
 
 
 if __name__ == '__main__':

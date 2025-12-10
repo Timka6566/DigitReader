@@ -35,10 +35,12 @@
     <canvas id="canvas" width="280" height="280"></canvas>
 
     <button id="clearBtn">Очистить</button>
+    <button id="sendBtn" style="display:none;">Отправить</button>
 
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
+        const sendBtn = document.getElementById("sendBtn");
         let drawing = false;
 
         // --- Функции рисования ---
@@ -55,15 +57,8 @@
             drawing = true;
             draw(e); // Начинаем рисовать сразу
             
-            // Показываем кнопку отправки, если она еще не видна
-            if (window.Telegram && window.Telegram.WebApp) {
-                const tg = window.Telegram.WebApp;
-                if (!tg.MainButton.isVisible) {
-                    tg.MainButton.setText("ОТПРАВИТЬ");
-                    tg.MainButton.enable();
-                    tg.MainButton.show();
-                }
-            }
+            // Показываем кнопку отправки
+            sendBtn.style.display = "block";
         }
 
         function draw(e) {
@@ -95,11 +90,22 @@
         document.getElementById("clearBtn").onclick = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             // Прячем кнопку
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.MainButton.hide();
-                window.Telegram.WebApp.MainButton.disable();
-            }
+            sendBtn.style.display = "none";
         };
+
+        // Обработчик кнопки отправки
+        sendBtn.addEventListener("click", function() {
+            const dataURL = canvas.toDataURL("image/png");
+            
+            // Отправляем данные через Telegram Web App
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.sendData(dataURL);
+            } else {
+                // Для локального тестирования
+                console.log("Telegram Web App не доступен");
+                console.log("Data URL:", dataURL);
+            }
+        });
 
         // --- Интеграция с Telegram ---
         if (window.Telegram && window.Telegram.WebApp) {
@@ -107,15 +113,6 @@
             
             tg.ready(); 
             tg.expand();
-
-            // Кнопка изначально скрыта
-            tg.MainButton.hide();
-
-            // Вешаем обработчик на главную кнопку
-            tg.onEvent('mainButtonClicked', function() {
-                const dataURL = canvas.toDataURL("image/png");
-                tg.sendData(dataURL);
-            });
         }
     </script>
 </body>
