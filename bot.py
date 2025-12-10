@@ -130,7 +130,7 @@ def draw_cmd(message):
     markup = InlineKeyboardMarkup()
     btn = InlineKeyboardButton(
         "✏ Нарисовать цифру",
-        web_app=WebAppInfo(url="https://your-domain.com/draw")
+        web_app=WebAppInfo(url="https://timka6566.github.io/DigitReader/")
     )
     markup.add(btn)
     bot.send_message(
