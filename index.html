@@ -35,70 +35,81 @@
     <canvas id="canvas" width="280" height="280"></canvas>
 
     <button id="clearBtn">Очистить</button>
-    <button id="sendBtn">Отправить</button>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // --- Настройка основной кнопки ---
+        tg.MainButton.text = "ГОТОВО";
+        tg.MainButton.show();
+
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
-
         let drawing = false;
+        let hasContent = false; // Флаг, что на холсте что-то есть
 
-        canvas.addEventListener("mousedown", start);
-        canvas.addEventListener("touchstart", start);
-
-        canvas.addEventListener("mousemove", draw);
-        canvas.addEventListener("touchmove", draw);
-
-        canvas.addEventListener("mouseup", end);
-        canvas.addEventListener("mouseleave", end);
-        canvas.addEventListener("touchend", end);
-
+        // --- Функции рисования ---
         function getPos(e) {
-            if (e.touches) {
-                return {
-                    x: e.touches[0].clientX - canvas.offsetLeft,
-                    y: e.touches[0].clientY - canvas.offsetTop
-                };
+            e.preventDefault(); // Предотвращаем стандартное поведение (прокрутку)
+            const rect = canvas.getBoundingClientRect();
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
             }
-            return {
-                x: e.clientX - canvas.offsetLeft,
-                y: e.clientY - canvas.offsetTop
-            };
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
         }
 
         function start(e) {
             drawing = true;
-            const pos = getPos(e);
-            ctx.beginPath();
-            ctx.moveTo(pos.x, pos.y);
+            if (!hasContent) {
+                hasContent = true;
+            }
+            draw(e); // Начинаем рисовать сразу
         }
 
         function draw(e) {
             if (!drawing) return;
             const pos = getPos(e);
-            ctx.lineWidth = 18;
+            ctx.lineWidth = 20; // Сделаем линию чуть толще для удобства
             ctx.lineCap = "round";
             ctx.strokeStyle = "black";
             ctx.lineTo(pos.x, pos.y);
             ctx.stroke();
+            ctx.beginPath(); // Начинаем новый путь, чтобы избежать "паутины"
+            ctx.moveTo(pos.x, pos.y);
         }
 
         function end() {
             drawing = false;
+            ctx.beginPath(); // Завершаем текущий путь
         }
 
+        // --- Обработчики событий ---
+        canvas.addEventListener("mousedown", start);
+        canvas.addEventListener("touchstart", start);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("touchmove", draw);
+        canvas.addEventListener("mouseup", end);
+        canvas.addEventListener("mouseleave", end);
+        canvas.addEventListener("touchend", end);
+
+        // --- Кнопки ---
         document.getElementById("clearBtn").onclick = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hasContent = false;
         };
 
-        document.getElementById("sendBtn").onclick = () => {
-            const data = canvas.toDataURL("image/png");
-            tg.sendData(data);  // <—— отправка в бот
-            tg.close();
-        };
+        // --- Отправка данных через MainButton ---
+        tg.onEvent('mainButtonClicked', function() {
+            if (hasContent) {
+                const dataURL = canvas.toDataURL("image/png");
+                tg.sendData(dataURL);
+                // Закрывать не обязательно, можно дать пользователю отправить еще
+                // tg.close();
+            } else {
+                tg.showAlert("Пожалуйста, нарисуйте что-нибудь!");
+            }
+        });
     </script>
 </body>
 </html>
