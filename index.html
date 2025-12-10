@@ -94,7 +94,7 @@
         };
 
         // Обработчик кнопки отправки
-        sendBtn.addEventListener("click", function() {
+        function sendDrawing() {
             const dataURL = canvas.toDataURL("image/png");
             
             // Отправляем данные через Telegram Web App
@@ -117,10 +117,13 @@
                     console.error("Ошибка при отправке данных через postMessage:", error);
                 }
             }
-        });
+        }
+
+        // Назначаем обработчик кнопки отправки
+        sendBtn.addEventListener("click", sendDrawing);
 
         // --- Интеграция с Telegram ---
-        document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('load', function() {
             if (window.Telegram && window.Telegram.WebApp) {
                 const tg = window.Telegram.WebApp;
                 
